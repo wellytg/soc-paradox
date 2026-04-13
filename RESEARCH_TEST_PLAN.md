@@ -39,6 +39,15 @@ This document outlines the validation scenarios to ensure the simulator correctl
 
 ---
 
+## 🎨 Visual Verification Tests
+
+| Feature | Action | Expected Visual Feedback |
+| :--- | :--- | :--- |
+| **Triangle Count Pass** | Enter count within ±1 of actual | Count is displayed in **BLUE** text in the analysis box. |
+| **Triangle Count Fail** | Enter count outside ±1 margin | Count is displayed in **RED** text in the analysis box. |
+| **Threat Code Pass** | Enter correct digit | Code is displayed in **GREEN** text. |
+| **Threat Code Fail** | Enter incorrect digit | Code is displayed in **RED** text. |
+
 ## 📊 Data Integrity & Sync Verification
 | Test Action | Expected Database Outcome |
 | :--- | :--- |

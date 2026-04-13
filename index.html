@@ -344,7 +344,7 @@
                     <div class="grid grid-cols-2 gap-4 text-center">
                         <div>
                             <p class="text-[9px] uppercase font-black text-slate-500">Triangle Count</p>
-                            <p class="text-lg font-mono"><span class="text-blue-400">${userCount}</span> / <span class="text-slate-300">${gameState.trianglesCreated}</span></p>
+                            <p class="text-lg font-mono"><span class="${countOk ? 'text-blue-400' : 'text-red-500'}">${userCount}</span> / <span class="text-slate-300">${gameState.trianglesCreated}</span></p>
                         </div>
                         <div>
                             <p class="text-[9px] uppercase font-black text-slate-500">Threat Code</p>
