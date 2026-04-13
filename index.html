@@ -139,8 +139,16 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // APP CONFIG & INITIALIZATION
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'soc-paradox-sim';
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0c4P4X0vkyVlNvybwx5hFzBLe3SIkSOc",
+            authDomain: "soc-paradox-research.firebaseapp.com",
+            projectId: "soc-paradox-research",
+            storageBucket: "soc-paradox-research.firebasestorage.app",
+            messagingSenderId: "811982321264",
+            appId: "1:811982321264:web:dbeeeb181bba97e1ee66b5",
+            measurementId: "G-TMREV6D2C9"
+        };
+        const appId = 'soc-paradox-sim';
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
