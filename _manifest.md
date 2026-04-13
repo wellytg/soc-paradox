@@ -1,4 +1,4 @@
-# _manifest.md: paradox-sim Component Mapping
+# _manifest.md: soc-paradox Component Mapping
 
 ## Core Components
 - **`index.html`**: The primary entry point and landing page for the Research Day.
