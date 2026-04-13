@@ -26,7 +26,7 @@
             </div>
             <div class="text-right">
                 <p class="text-[10px] text-slate-500 uppercase font-bold text-slate-400">Current Session</p>
-                <p id="analyst-id-display" class="text-lg font-mono text-blue-400 font-bold tracking-tighter italic">Analyst #...</p>
+                <input id="analyst-id-input" class="bg-transparent text-lg font-mono text-blue-400 font-bold tracking-tighter italic text-right outline-none focus:text-blue-300 w-32" value="Analyst #...">
             </div>
         </div>
 
@@ -135,7 +135,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, limit, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // APP CONFIG & INITIALIZATION
@@ -166,6 +166,24 @@
         };
 
         // AUTH & BOOTSTRAP
+        const fetchLatestAnalystIndex = async () => {
+            try {
+                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'), orderBy('analystIndex', 'desc'), limit(1));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const lastEntry = querySnapshot.docs[0].data();
+                    gameState.analystIndex = (lastEntry.analystIndex || 0) + 1;
+                } else {
+                    gameState.analystIndex = 1;
+                }
+                const input = document.getElementById('analyst-id-input');
+                input.value = `Analyst #${String(gameState.analystIndex).padStart(3, '0')}`;
+            } catch (e) {
+                console.error("Failed to fetch latest index", e);
+                gameState.analystIndex = 1;
+            }
+        };
+
         const initAuth = async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -179,13 +197,10 @@
             }
         };
 
-        onAuthStateChanged(auth, (u) => {
+        onAuthStateChanged(auth, async (u) => {
             user = u;
             if (u) {
-                // Determine Analyst ID from local storage or cloud
-                const localId = localStorage.getItem('last_analyst_id');
-                gameState.analystIndex = localId ? parseInt(localId) + 1 : 1;
-                document.getElementById('analyst-id-display').innerText = `Analyst #${String(gameState.analystIndex).padStart(3, '0')}`;
+                await fetchLatestAnalystIndex();
                 
                 document.getElementById('btn-init').innerText = "Begin New Shift";
                 document.getElementById('btn-init').disabled = false;
@@ -276,6 +291,7 @@
         window.validateResults = async () => {
             const userCount = parseInt(document.getElementById('guess-count').value || '0');
             const userCode = document.getElementById('guess-code').value.trim().toUpperCase();
+            const customId = document.getElementById('analyst-id-input').value.trim() || `Analyst #${gameState.analystIndex}`;
             
             // Success logic: Margin of error 1 for count, exact match for code
             const countPrecisionOk = Math.abs(userCount - gameState.trianglesCreated) <= 1; 
@@ -285,10 +301,9 @@
             // SAVE TO FIRESTORE (Strict Path Rule 1)
             if (user) {
                 try {
-                    localStorage.setItem('last_analyst_id', gameState.analystIndex);
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'), {
                         analystIndex: gameState.analystIndex,
-                        analystId: user.uid.slice(-4).toUpperCase(),
+                        analystId: customId,
                         mode: gameState.mode,
                         volume: gameState.totalAlerts,
                         threatFound: codeSuccess ? 'YES' : 'NO',
