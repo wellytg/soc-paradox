@@ -1,5 +1,7 @@
 # SOC Strategic Alignment Simulator (soc-paradox-sim)
 
+**Status:** 🚀 Database Ready & Research Configured
+
 A research-oriented single-file web application designed to simulate the "Speed-Quality Paradox" in Security Operations Centers (SOC).
 
 ## 🎯 Project Objective
@@ -19,9 +21,9 @@ This simulator explores the trade-offs between:
 - **Strategy Coherence Audit:** Provides an automated analysis of the user's performance relative to the chosen strategy.
 
 ## ⚙️ Configuration
-The application requires a Firebase configuration. Replace the following placeholders in `index.html`:
-- `__firebase_config`: Your Firebase project configuration JSON.
-- `__app_id`: (Optional) Custom application identifier.
+- **Firebase Project:** `soc-paradox-research`
+- **Authentication:** Anonymous Sign-in enabled.
+- **Database:** Firestore (Security Rules configured for research integrity).
 
 ## 📄 License
 Research Project - Internal Use Only.
