@@ -306,10 +306,13 @@
             const container = document.getElementById('metric-cards');
             const exp = document.getElementById('explanation-box');
             const isFast = gameState.mode === 'fast';
+            const success = overallSuccess(countOk, codeOk);
+            
             const kpiVal = isFast ? 'PASSED' : 'LOW';
             const kpiColor = isFast ? 'text-green-400 border-green-900 bg-green-950/20' : 'text-red-400 border-red-900 bg-red-950/20';
-            const secureVal = (countOk && codeOk) ? 'ALIGNED' : 'BREACHED';
-            const secureColor = (countOk && codeOk) ? 'text-green-400 border-green-900 bg-green-950/20' : 'text-red-400 border-red-900 bg-red-950/20';
+            
+            const secureVal = success ? 'ALIGNED' : 'BREACHED';
+            const secureColor = success ? 'text-green-400 border-green-900 bg-green-950/20' : 'text-red-400 border-red-900 bg-red-950/20';
 
             container.innerHTML = `
                 <div class="border p-4 rounded-xl text-center ${kpiColor}">
@@ -323,12 +326,14 @@
                     <p class="text-[9px] mt-1 italic">${codeOk ? 'IoC Detected' : 'IoC Missed'}</p>
                 </div>`;
 
-            if (isFast && overallSuccess(countOk, codeOk)) {
+            if (isFast && success) {
                 exp.innerHTML = `<strong>SOC NINJA DETECTED!</strong> You managed to beat the speed paradox. While technically possible, your success rate is likely <5% compared to peers under this workload.`;
+            } else if (isFast && !success) {
+                exp.innerHTML = `<strong>The "Productivity Trap":</strong> You triaged ${gameState.totalAlerts} tickets, but the blur effect and high speed caused a Security Breach. You missed the Threat Code (${gameState.threatCode}).`;
+            } else if (!isFast && success) {
+                exp.innerHTML = `<strong>Strategic Alignment:</strong> By choosing precision over volume (Deep Review), you successfully identified the IoC and secured the environment.`;
             } else {
-                exp.innerHTML = isFast ? 
-                    `The "Productivity Trap": You triaged ${gameState.totalAlerts} tickets, but the blur effect caused you to miss the hidden Threat Code (${gameState.threatCode}).` : 
-                    `Strategic Alignment: By choosing precision over volume, you successfully identified the IoC.`;
+                exp.innerHTML = `<strong>Process Failure:</strong> Even in Deep Review mode, the Security Goal was not met. This suggests a failure in cognitive attention or protocol adherence.`;
             }
         }
 
