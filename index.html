@@ -283,8 +283,7 @@
         };
 
         function endGame() {
-            clearInterval(gameState.timerId);
-            clearInterval(gameState.intervalId);
+            document.getElementById('timer').classList.replace('text-yellow-500', 'text-blue-500');
             showScreen('screen-verify');
         }
 
@@ -393,6 +392,27 @@
             }, (error) => {
                 console.error("Firestore sync error", error);
                 document.getElementById('sync-status').innerText = "Sync Error - Retrying";
+                document.getElementById('sync-status').classList.replace('text-green-500', 'text-red-500');
+            });
+        }
+
+        window.resetToChoice = () => {
+            document.getElementById('guess-count').value = '';
+            document.getElementById('guess-code').value = '';
+            showScreen('screen-choice');
+        };
+
+        window.clearData = () => {
+            if (confirm("Reset local analyst counter?")) {
+                localStorage.removeItem('last_analyst_id');
+                location.reload();
+            }
+        };
+
+    </script>
+</body>
+</html>
+         document.getElementById('sync-status').innerText = "Sync Error - Retrying";
                 document.getElementById('sync-status').classList.replace('text-green-500', 'text-red-500');
             });
         }
