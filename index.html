@@ -239,8 +239,22 @@
 
             gameState.timerId = setInterval(() => {
                 gameState.timer -= 0.1;
-                document.getElementById('timer').innerText = gameState.timer.toFixed(1);
-                if (gameState.timer <= 0) endGame();
+                const displayTimer = Math.max(0, gameState.timer);
+                document.getElementById('timer').innerText = displayTimer.toFixed(1);
+                
+                if (gameState.timer <= 0) {
+                    clearInterval(gameState.timerId);
+                    clearInterval(gameState.intervalId);
+                    
+                    // Start Drain Period: Wait for existing shapes to clear
+                    document.getElementById('timer').innerText = "FINALIZING...";
+                    document.getElementById('timer').classList.replace('text-blue-500', 'text-yellow-500');
+                    
+                    // Drain time must exceed drift speed (5.8s in slow mode)
+                    setTimeout(() => {
+                        endGame();
+                    }, 6500); 
+                }
             }, 100);
 
             gameState.intervalId = setInterval(() => {
@@ -392,27 +406,6 @@
             }, (error) => {
                 console.error("Firestore sync error", error);
                 document.getElementById('sync-status').innerText = "Sync Error - Retrying";
-                document.getElementById('sync-status').classList.replace('text-green-500', 'text-red-500');
-            });
-        }
-
-        window.resetToChoice = () => {
-            document.getElementById('guess-count').value = '';
-            document.getElementById('guess-code').value = '';
-            showScreen('screen-choice');
-        };
-
-        window.clearData = () => {
-            if (confirm("Reset local analyst counter?")) {
-                localStorage.removeItem('last_analyst_id');
-                location.reload();
-            }
-        };
-
-    </script>
-</body>
-</html>
-         document.getElementById('sync-status').innerText = "Sync Error - Retrying";
                 document.getElementById('sync-status').classList.replace('text-green-500', 'text-red-500');
             });
         }
