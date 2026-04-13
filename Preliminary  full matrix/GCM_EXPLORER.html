@@ -1,0 +1,2563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCM Explorer - Goal Coherence Matrix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .metric-pill { background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
+        .task-pill { background: #f3f4f6; color: #374151; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
+        .nav-btn { padding: 8px 16px; border-radius: 8px; font-weight: bold; transition: all 0.2s; }
+        .nav-btn-active { background: #4338ca; color: white; }
+        .nav-btn-inactive { background: #e5e7eb; color: #4b5563; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+
+<div class="container mx-auto px-4 py-8">
+    <header class="mb-8 border-b pb-6">
+        <h1 class="text-4xl font-extrabold text-indigo-900">GCM Explorer <span class="text-sm font-normal text-gray-500">v2.0-EXPANDED</span></h1>
+        <p class="mt-2 text-lg text-gray-600">Goal Coherence Matrix: Strategic alignment of SOC Tier 1 Tasks and Metrics to Organizational Goals.</p>
+        <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <p class="text-sm text-yellow-700 font-bold">Assumptions Used:</p>
+            <ul class="text-xs text-yellow-600 list-disc ml-5 mt-1" id="assumptions-list"></ul>
+        </div>
+    </header>
+
+    <div class="flex space-x-4 mb-8">
+        <button id="view-goal-btn" class="nav-btn nav-btn-active" onclick="switchView('goal')">Goal > Task View</button>
+        <button id="view-metric-btn" class="nav-btn nav-btn-inactive" onclick="switchView('metric')">Metric > Task View</button>
+    </div>
+
+    <div id="filter-section" class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
+        <!-- Sidebar Filters -->
+        <div class="lg:col-span-1 space-y-6">
+            <section id="goal-filter-box">
+                <h3 class="font-bold text-gray-700 mb-2">Filter by Goal</h3>
+                <div id="goal-filters" class="space-y-2"></div>
+            </section>
+            <section id="theme-filter-box">
+                <h3 class="font-bold text-gray-700 mb-2">Filter by Theme</h3>
+                <div id="theme-filters" class="space-y-2"></div>
+            </section>
+            <section id="metric-filter-box" class="hidden">
+                <h3 class="font-bold text-gray-700 mb-2">Filter by Metric</h3>
+                <div id="metric-filters" class="space-y-2"></div>
+            </section>
+        </div>
+
+        <!-- Main Content -->
+        <div class="lg:col-span-3">
+            <div id="active-filters-display" class="mb-4 flex flex-wrap gap-2"></div>
+            
+            <div class="overflow-x-auto bg-white rounded-lg shadow">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-100" id="table-head">
+                        <!-- Head injected here -->
+                    </thead>
+                    <tbody id="gcm-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Data injected here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="stats" class="mt-4 text-sm text-gray-500 italic text-right"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const embeddedData = {
+    "metadata": {
+        "version": "1.0-EXPANDED",
+        "description": "Expanded Goal Coherence Matrix mapping Tasks to Goals via individual Metrics.",
+        "assumptions": [
+            "Goals G1-G8 are derived from WISP 2025 proposal.",
+            "Themes M-THM-01-05 are derived from canonical taxonomy.",
+            "Mapping uses a semantic heuristic: Monitoring -> Detection, Handling -> Impact, Documentation -> Compliance.",
+            "All tasks contribute to G5 (Efficiency) via workload and productivity metrics.",
+            "Each record represents a unique Task-Metric-Goal tuple."
+        ]
+    },
+    "gcm_data": [
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G1",
+            "Goal_Name": "Impact Mitigation",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-001",
+            "Task_Name": "Alert Reception & Cause Analysis",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-001",
+            "Task_Name": "Alert Reception & Cause Analysis",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-002",
+            "Task_Name": "Continual Monitoring (SIEM/IDS)",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-002",
+            "Task_Name": "Continual Monitoring (SIEM/IDS)",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-003",
+            "Task_Name": "Detection and Alerting",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-003",
+            "Task_Name": "Detection and Alerting",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-009",
+            "Task_Name": "Network Breach Monitoring (O*NET)",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-009",
+            "Task_Name": "Network Breach Monitoring (O*NET)",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-017",
+            "Task_Name": "Situational Awareness",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-017",
+            "Task_Name": "Situational Awareness",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G2",
+            "Goal_Name": "Detection Velocity",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G3",
+            "Goal_Name": "Compliance & Audit",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-007",
+            "Task_Name": "Incident Documentation",
+            "Metric_ID": "CAN-MET-012",
+            "Metric_Name": "Quality of Incident Report (QIR)"
+        },
+        {
+            "Goal_ID": "G3",
+            "Goal_Name": "Compliance & Audit",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-015",
+            "Task_Name": "Ticket Updates",
+            "Metric_ID": "CAN-MET-012",
+            "Metric_Name": "Quality of Incident Report (QIR)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-007",
+            "Task_Name": "Incident Documentation",
+            "Metric_ID": "CAN-MET-012",
+            "Metric_Name": "Quality of Incident Report (QIR)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-015",
+            "Task_Name": "Ticket Updates",
+            "Metric_ID": "CAN-MET-012",
+            "Metric_Name": "Quality of Incident Report (QIR)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G4",
+            "Goal_Name": "Security Awareness",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-001",
+            "Task_Name": "Alert Reception & Cause Analysis",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-001",
+            "Task_Name": "Alert Reception & Cause Analysis",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-001",
+            "Task_Name": "Alert Reception & Cause Analysis",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-001",
+            "Task_Name": "Alert Reception & Cause Analysis",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-002",
+            "Task_Name": "Continual Monitoring (SIEM/IDS)",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-002",
+            "Task_Name": "Continual Monitoring (SIEM/IDS)",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-002",
+            "Task_Name": "Continual Monitoring (SIEM/IDS)",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-002",
+            "Task_Name": "Continual Monitoring (SIEM/IDS)",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-003",
+            "Task_Name": "Detection and Alerting",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-003",
+            "Task_Name": "Detection and Alerting",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-003",
+            "Task_Name": "Detection and Alerting",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-003",
+            "Task_Name": "Detection and Alerting",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-007",
+            "Task_Name": "Incident Documentation",
+            "Metric_ID": "CAN-MET-012",
+            "Metric_Name": "Quality of Incident Report (QIR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-007",
+            "Task_Name": "Incident Documentation",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-007",
+            "Task_Name": "Incident Documentation",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-007",
+            "Task_Name": "Incident Documentation",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-009",
+            "Task_Name": "Network Breach Monitoring (O*NET)",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-009",
+            "Task_Name": "Network Breach Monitoring (O*NET)",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-009",
+            "Task_Name": "Network Breach Monitoring (O*NET)",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-009",
+            "Task_Name": "Network Breach Monitoring (O*NET)",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-05",
+            "Theme_Name": "Vulnerability & Specialized Analysis",
+            "Task_ID": "CAN-TSK-011",
+            "Task_Name": "Vulnerability Review",
+            "Metric_ID": "CAN-MET-006",
+            "Metric_Name": "Quality of Analysis (QoA)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-05",
+            "Theme_Name": "Vulnerability & Specialized Analysis",
+            "Task_ID": "CAN-TSK-011",
+            "Task_Name": "Vulnerability Review",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-05",
+            "Theme_Name": "Vulnerability & Specialized Analysis",
+            "Task_ID": "CAN-TSK-011",
+            "Task_Name": "Vulnerability Review",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-05",
+            "Theme_Name": "Vulnerability & Specialized Analysis",
+            "Task_ID": "CAN-TSK-011",
+            "Task_Name": "Vulnerability Review",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-015",
+            "Task_Name": "Ticket Updates",
+            "Metric_ID": "CAN-MET-012",
+            "Metric_Name": "Quality of Incident Report (QIR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-015",
+            "Task_Name": "Ticket Updates",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-015",
+            "Task_Name": "Ticket Updates",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-04",
+            "Theme_Name": "Documentation & Reporting",
+            "Task_ID": "CAN-TSK-015",
+            "Task_Name": "Ticket Updates",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-017",
+            "Task_Name": "Situational Awareness",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-017",
+            "Task_Name": "Situational Awareness",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-017",
+            "Task_Name": "Situational Awareness",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-017",
+            "Task_Name": "Situational Awareness",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-009",
+            "Metric_Name": "Analyst Productivity / Incidents per Shift"
+        },
+        {
+            "Goal_ID": "G5",
+            "Goal_Name": "Operational Efficiency",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-011",
+            "Metric_Name": "Analyst Burnout / Health"
+        },
+        {
+            "Goal_ID": "G6",
+            "Goal_Name": "Asset Protection",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-001",
+            "Task_Name": "Alert Reception & Cause Analysis",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G6",
+            "Goal_Name": "Asset Protection",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-001",
+            "Task_Name": "Alert Reception & Cause Analysis",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G6",
+            "Goal_Name": "Asset Protection",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-002",
+            "Task_Name": "Continual Monitoring (SIEM/IDS)",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G6",
+            "Goal_Name": "Asset Protection",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-002",
+            "Task_Name": "Continual Monitoring (SIEM/IDS)",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G6",
+            "Goal_Name": "Asset Protection",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-003",
+            "Task_Name": "Detection and Alerting",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G6",
+            "Goal_Name": "Asset Protection",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-003",
+            "Task_Name": "Detection and Alerting",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G6",
+            "Goal_Name": "Asset Protection",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-009",
+            "Task_Name": "Network Breach Monitoring (O*NET)",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G6",
+            "Goal_Name": "Asset Protection",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-009",
+            "Task_Name": "Network Breach Monitoring (O*NET)",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G6",
+            "Goal_Name": "Asset Protection",
+            "Theme_ID": "M-THM-05",
+            "Theme_Name": "Vulnerability & Specialized Analysis",
+            "Task_ID": "CAN-TSK-011",
+            "Task_Name": "Vulnerability Review",
+            "Metric_ID": "CAN-MET-006",
+            "Metric_Name": "Quality of Analysis (QoA)"
+        },
+        {
+            "Goal_ID": "G6",
+            "Goal_Name": "Asset Protection",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-017",
+            "Task_Name": "Situational Awareness",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G6",
+            "Goal_Name": "Asset Protection",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-017",
+            "Task_Name": "Situational Awareness",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-004",
+            "Task_Name": "Event Correlation",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-005",
+            "Task_Name": "IDS Alert Validation",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-006",
+            "Task_Name": "Anomaly Identification",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-008",
+            "Task_Name": "Incident Escalation",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-010",
+            "Task_Name": "Alert Triage & Legitimacy Verification",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-012",
+            "Task_Name": "Initial Investigation (Academic)",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-013",
+            "Task_Name": "Evidence Preservation",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-014",
+            "Task_Name": "Shift Handover",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-016",
+            "Task_Name": "Alert Enrichment",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-018",
+            "Task_Name": "SLA Compliance",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-002",
+            "Metric_Name": "Mean Time to Acknowledge (MTTA)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-003",
+            "Metric_Name": "Mean Time to Triage (MTTT)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-02",
+            "Theme_Name": "Alert Triage & Validation",
+            "Task_ID": "CAN-TSK-019",
+            "Task_Name": "Root Cause Analysis",
+            "Metric_ID": "CAN-MET-005",
+            "Metric_Name": "False Positive Rate (FPR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-004",
+            "Metric_Name": "Mean Time to Respond / Resolve (MTTR)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-010",
+            "Metric_Name": "Mean Time to Escalation (MTTE)"
+        },
+        {
+            "Goal_ID": "G7",
+            "Goal_Name": "Collaboration & Intel",
+            "Theme_ID": "M-THM-03",
+            "Theme_Name": "Incident Handling & Escalation",
+            "Task_ID": "CAN-TSK-020",
+            "Task_Name": "Incident Handling (Real-time)",
+            "Metric_ID": "CAN-MET-007",
+            "Metric_Name": "Escalation Rate / Accuracy"
+        },
+        {
+            "Goal_ID": "G8",
+            "Goal_Name": "Proactive Defense",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-001",
+            "Task_Name": "Alert Reception & Cause Analysis",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G8",
+            "Goal_Name": "Proactive Defense",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-001",
+            "Task_Name": "Alert Reception & Cause Analysis",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G8",
+            "Goal_Name": "Proactive Defense",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-002",
+            "Task_Name": "Continual Monitoring (SIEM/IDS)",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G8",
+            "Goal_Name": "Proactive Defense",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-002",
+            "Task_Name": "Continual Monitoring (SIEM/IDS)",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G8",
+            "Goal_Name": "Proactive Defense",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-003",
+            "Task_Name": "Detection and Alerting",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G8",
+            "Goal_Name": "Proactive Defense",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-003",
+            "Task_Name": "Detection and Alerting",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G8",
+            "Goal_Name": "Proactive Defense",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-009",
+            "Task_Name": "Network Breach Monitoring (O*NET)",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G8",
+            "Goal_Name": "Proactive Defense",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-009",
+            "Task_Name": "Network Breach Monitoring (O*NET)",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        },
+        {
+            "Goal_ID": "G8",
+            "Goal_Name": "Proactive Defense",
+            "Theme_ID": "M-THM-05",
+            "Theme_Name": "Vulnerability & Specialized Analysis",
+            "Task_ID": "CAN-TSK-011",
+            "Task_Name": "Vulnerability Review",
+            "Metric_ID": "CAN-MET-006",
+            "Metric_Name": "Quality of Analysis (QoA)"
+        },
+        {
+            "Goal_ID": "G8",
+            "Goal_Name": "Proactive Defense",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-017",
+            "Task_Name": "Situational Awareness",
+            "Metric_ID": "CAN-MET-001",
+            "Metric_Name": "Mean Time to Detect (MTTD)"
+        },
+        {
+            "Goal_ID": "G8",
+            "Goal_Name": "Proactive Defense",
+            "Theme_ID": "M-THM-01",
+            "Theme_Name": "Continuous Monitoring",
+            "Task_ID": "CAN-TSK-017",
+            "Task_Name": "Situational Awareness",
+            "Metric_ID": "CAN-MET-008",
+            "Metric_Name": "Alert Volume / Workload"
+        }
+    ]
+};
+    let rawData = [];
+    let filteredData = [];
+    let currentView = 'goal';
+    let activeFilters = {
+        goals: [],
+        themes: [],
+        metrics: []
+    };
+
+    function loadData() {
+        try {
+            rawData = embeddedData.gcm_data;
+            filteredData = [...rawData];
+
+            // Render Assumptions
+            const assumptionList = document.getElementById('assumptions-list');
+            embeddedData.metadata.assumptions.forEach(a => {
+                const li = document.createElement('li');
+                li.textContent = a;
+                assumptionList.appendChild(li);
+            });
+
+            setupFilters();
+            render();
+        } catch (error) {
+            console.error("Error loading GCM data:", error);
+            document.getElementById('gcm-table-body').innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-500">Error loading data.</td></tr>`;
+        }
+    }
+
+    function setupFilters() {
+        const goals = [...new Set(rawData.map(d => d.Goal_Name))].sort();
+        const themes = [...new Set(rawData.map(d => d.Theme_Name))].sort();
+        const metrics = [...new Set(rawData.map(d => d.Metric_Name))].sort();
+
+        const goalContainer = document.getElementById('goal-filters');
+        goalContainer.innerHTML = '';
+        goals.forEach(g => {
+            const label = document.createElement('label');
+            label.className = "flex items-center space-x-2 text-sm cursor-pointer hover:text-indigo-600";
+            label.innerHTML = `<input type="checkbox" class="rounded text-indigo-600" value="${g}" onchange="toggleFilter('goals', '${g}')"> <span>${g}</span>`;
+            goalContainer.appendChild(label);
+        });
+
+        const themeContainer = document.getElementById('theme-filters');
+        themeContainer.innerHTML = '';
+        themes.forEach(t => {
+            const label = document.createElement('label');
+            label.className = "flex items-center space-x-2 text-sm cursor-pointer hover:text-indigo-600";
+            label.innerHTML = `<input type="checkbox" class="rounded text-indigo-600" value="${t}" onchange="toggleFilter('themes', '${t}')"> <span>${t}</span>`;
+            themeContainer.appendChild(label);
+        });
+
+        const metricContainer = document.getElementById('metric-filters');
+        metricContainer.innerHTML = '';
+        metrics.forEach(m => {
+            const label = document.createElement('label');
+            label.className = "flex items-center space-x-2 text-sm cursor-pointer hover:text-indigo-600";
+            label.innerHTML = `<input type="checkbox" class="rounded text-indigo-600" value="${m}" onchange="toggleFilter('metrics', '${m}')"> <span>${m}</span>`;
+            metricContainer.appendChild(label);
+        });
+    }
+
+    function switchView(view) {
+        currentView = view;
+        document.getElementById('view-goal-btn').className = view === 'goal' ? 'nav-btn nav-btn-active' : 'nav-btn nav-btn-inactive';
+        document.getElementById('view-metric-btn').className = view === 'metric' ? 'nav-btn nav-btn-active' : 'nav-btn nav-btn-inactive';
+        
+        document.getElementById('goal-filter-box').className = view === 'goal' ? 'space-y-6' : 'hidden';
+        document.getElementById('theme-filter-box').className = view === 'goal' ? 'space-y-6' : 'space-y-6';
+        document.getElementById('metric-filter-box').className = view === 'metric' ? 'space-y-6' : 'hidden';
+        
+        render();
+    }
+
+    function toggleFilter(type, value) {
+        const idx = activeFilters[type].indexOf(value);
+        if (idx > -1) activeFilters[type].splice(idx, 1);
+        else activeFilters[type].push(value);
+        applyFilters();
+    }
+
+    function applyFilters() {
+        filteredData = rawData.filter(d => {
+            const goalMatch = activeFilters.goals.length === 0 || activeFilters.goals.includes(d.Goal_Name);
+            const themeMatch = activeFilters.themes.length === 0 || activeFilters.themes.includes(d.Theme_Name);
+            const metricMatch = activeFilters.metrics.length === 0 || activeFilters.metrics.includes(d.Metric_Name);
+            return goalMatch && themeMatch && metricMatch;
+        });
+        render();
+    }
+
+    function render() {
+        const head = document.getElementById('table-head');
+        const body = document.getElementById('gcm-table-body');
+        body.innerHTML = '';
+
+        if (currentView === 'goal') {
+            head.innerHTML = `
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Goal</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Theme</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Canonical Task</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Metric</th>
+                </tr>
+            `;
+            filteredData.forEach(d => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-indigo-50 transition-colors";
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-indigo-700">${d.Goal_ID}: ${d.Goal_Name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">${d.Theme_Name}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${d.Task_Name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="metric-pill">${d.Metric_Name}</span></td>
+                `;
+                body.appendChild(row);
+            });
+        } else {
+            head.innerHTML = `
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Metric</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Canonical Task</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Theme</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supports Goal</th>
+                </tr>
+            `;
+            // Sort by Metric for this view
+            const metricSorted = [...filteredData].sort((a,b) => a.Metric_Name.localeCompare(b.Metric_Name));
+            metricSorted.forEach(d => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-indigo-50 transition-colors";
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-indigo-700">${d.Metric_Name}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${d.Task_Name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">${d.Theme_Name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-indigo-600">${d.Goal_Name}</td>
+                `;
+                body.appendChild(row);
+            });
+        }
+
+        document.getElementById('stats').textContent = `Showing ${filteredData.length} associations.`;
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>
