@@ -333,12 +333,24 @@
                 <div class="border p-4 rounded-xl text-center ${kpiColor}">
                     <p class="text-[9px] uppercase font-black opacity-70">Volume (KPI)</p>
                     <p class="text-xl font-black">${kpiVal}</p>
-                    <p class="text-[9px] mt-1">${gameState.totalAlerts} Alerts</p>
+                    <p class="text-[9px] mt-1">${gameState.totalAlerts} Alerts Total</p>
                 </div>
                 <div class="border p-4 rounded-xl text-center ${secureColor}">
                     <p class="text-[9px] uppercase font-black opacity-70">Security Goal</p>
                     <p class="text-xl font-black">${secureVal}</p>
                     <p class="text-[9px] mt-1 italic">${codeOk ? 'IoC Detected' : 'IoC Missed'}</p>
+                </div>
+                <div class="col-span-2 border border-slate-700 p-4 rounded-xl bg-slate-800/50">
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                            <p class="text-[9px] uppercase font-black text-slate-500">Triangle Count</p>
+                            <p class="text-lg font-mono"><span class="text-blue-400">${userCount}</span> / <span class="text-slate-300">${gameState.trianglesCreated}</span></p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] uppercase font-black text-slate-500">Threat Code</p>
+                            <p class="text-lg font-mono"><span class="${codeOk ? 'text-green-400' : 'text-red-500'}">${userCode || '?'}</span> / <span class="text-slate-300">${gameState.threatCode}</span></p>
+                        </div>
+                    </div>
                 </div>`;
 
             if (isFast && success) {
