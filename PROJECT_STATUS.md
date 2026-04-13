@@ -1,4 +1,4 @@
-# PROJECT_STATUS.md: paradox-sim
+# PROJECT_STATUS.md: soc-paradox
 
 ## Current Status
 **Status:** ACTIVE
@@ -7,6 +7,7 @@
 
 ## Recent Achievements
 - Initialized Hierarchical AI Management System (V1.2) protocol.
+- **Remote Update:** Migrated repository remote to `https://github.com/wellytg/soc-paradox` and pushed existing state.
 - **Enhanced Landing Page:** Upgraded `index.html` with high-impact hero section featuring direct links to the simulation and the GCM Explorer.
 - **Integrated Supplemental Data:** Added secondary navigation to `GCM_EXPLORER.html`, `SOC_T1_Agreement_Dashboard.html`, and raw data CSV.
 - Verified GitHub Pages deployment workflow.
