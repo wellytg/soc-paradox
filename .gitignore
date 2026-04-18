@@ -7,5 +7,11 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
-# Logs
-*.log
+# AI Context & Management (Gemini CLI)
+.context.md
+_manifest.md
+PROJECT_STATUS.md
+visit_log.md
+.llm_history/
+.gemini/
+.geminiignore
